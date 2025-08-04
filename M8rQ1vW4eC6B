@@ -1,0 +1,1196 @@
+getgenv().Config = {
+	Invite = "Ch4dr3y.gg",
+	Version = "1.0",
+}
+
+getgenv().luaguardvars = {
+	DiscordName = "chadrey_9",
+}
+
+local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/ChadreysOfficialScript/Uilibs/refs/heads/main/Chadz/Chadz.lib"))()
+library:init()
+
+local Window = library.NewWindow({
+	title = "Ch4dr3y.gg | Aftermath V1",
+	size = UDim2.new(0, 590, 0, 550)
+})
+
+local tabs = {
+	Tab1 = Window:AddTab("Combat"),
+	Tab2 = Window:AddTab("Visual"),
+	Settings = library:CreateSettingsTab(Window),
+}
+
+local sections = {
+	Section1 = tabs.Tab1:AddSection("Aimbot", 1),
+	Section3 = tabs.Tab1:AddSection("Carfly", 2),
+	Section4 = tabs.Tab1:AddSection("World", 4),
+    Section5 = tabs.Tab1:AddSection("Hitsound", 2),
+	Section9 = tabs.Tab1:AddSection("FOV CIRCLE", 1),
+
+
+	VisualSection1 = tabs.Tab2:AddSection("Humans", 1),
+	VisualSection2 = tabs.Tab2:AddSection("Inventory Viewer", 2),
+	VisualSection3 = tabs.Tab2:AddSection("Vehicle ESP", 3),
+    VisualSection4 = tabs.Tab2:AddSection("Gun Scanner", 1),
+    VisualSection5 = tabs.Tab2:AddSection("Graves", 1),
+
+}
+
+
+local Workspace = game:GetService("Workspace")
+local UserInputService = game:GetService("UserInputService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local localPlayer = Players.LocalPlayer
+local camera = Workspace.CurrentCamera
+
+GRAVITY = 50
+enabled = false
+showFOV = false
+showSnapline = false
+fovRadius = 200
+fovThickness = 2
+snaplineThickness = 2
+smoothing = 0.5
+fovColor = Color3.fromRGB(255, 255, 255)
+snaplineColor = Color3.fromRGB(255, 0, 0)
+fovRainbow = false
+snaplineRainbow = false
+keybind = Enum.KeyCode.E
+aiming = false
+snapline = nil
+
+predictionXAdjust = 1
+predictionYAdjust = 1
+
+local fovCircle = Drawing.new("Circle")
+fovCircle.Radius = fovRadius
+fovCircle.Thickness = fovThickness
+fovCircle.NumSides = 64
+fovCircle.Color = fovColor
+fovCircle.Transparency = 1
+fovCircle.Filled = false
+fovCircle.Visible = showFOV
+
+sections.Section1:AddToggle({
+	enabled = true,
+	text = "Aimbot",
+	flag = "aimbot_enabled",
+	tooltip = "Toggle the aimbot system",
+	risky = false,
+	callback = function(v)
+	    enabled = v
+	end
+})
+
+sections.Section9:AddToggle({
+	enabled = true,
+	text = "Show FOV Circle",
+	flag = "show_fov",
+	tooltip = "Display the FOV Circle on screen",
+	risky = false,
+	callback = function(v)
+	    showFOV = v
+	end
+})
+
+sections.Section1:AddToggle({
+	enabled = true,
+	text = "Show Snapline",
+	flag = "show_snapline",
+	tooltip = "Draw snapline to the target",
+	risky = false,
+	callback = function(v)
+	    showSnapline = v
+	end
+})
+
+sections.Section9:AddSlider({
+	text = "FOV Radius", 
+	flag = 'fov_radius', 
+	value = 200, 
+	min = 0, 
+	max = 500, 
+	increment = 1,
+	tooltip = "Controls the radius of the FOV circle",
+	risky = false,
+	callback = function(v)
+		fovRadius = v
+		fovCircle.Radius = v
+	end
+})
+
+sections.Section9:AddSlider({
+	text = "FOV Outline Thickness", 
+	flag = 'fov_thickness', 
+	value = 2, 
+	min = 0, 
+	max = 100, 
+	increment = 1,
+	tooltip = "Thickness of the FOV circle",
+	risky = false,
+	callback = function(v)
+		fovThickness = v
+		fovCircle.Thickness = v
+	end
+})
+
+sections.Section1:AddSlider({
+	text = "Snapline Thickness", 
+	flag = 'snapline_thickness', 
+	value = 2, 
+	min = 0, 
+	max = 100, 
+	increment = 1,
+	tooltip = "Thickness of the snapline",
+	risky = false,
+	callback = function(v)
+		snaplineThickness = v
+	end
+})
+
+sections.Section1:AddSlider({
+	text = "Aimbot Smoothing", 
+	flag = 'aimbot_smoothing', 
+	value = 100, 
+	min = 0, 
+	max = 100, 
+	increment = 1,
+	tooltip = "Controls how smooth aimbot movement is",
+	risky = false,
+	callback = function(v)
+		smoothing = v / 100
+	end
+})
+
+sections.Section1:AddSlider({
+	text = "Prediction X Adjustment", 
+	flag = 'prediction_x', 
+	value = 100, 
+	min = 0, 
+	max = 200, 
+	increment = 1,
+	tooltip = "Adjusts horizontal prediction strength",
+	risky = false,
+	callback = function(v)
+		predictionXAdjust = v / 100
+	end
+})
+
+sections.Section1:AddSlider({
+	text = "Prediction Y Adjustment", 
+	flag = 'prediction_y', 
+	value = 100, 
+	min = 0, 
+	max = 200, 
+	increment = 1,
+	tooltip = "Adjusts vertical prediction strength",
+	risky = false,
+	callback = function(v)
+		predictionYAdjust = v / 100
+	end
+})
+
+sections.Section9:AddColor({
+	enabled = true,
+	text = "FOV Color",
+	flag = "fov_circle_color",
+	tooltip = "Select the color of the FOV circle",
+	color = Color3.fromRGB(255, 255, 255),
+	trans = 0,
+	open = false,
+	callback = function(c)
+		fovColor = c
+		fovCircle.Color = c
+	end
+})
+
+sections.Section9:AddToggle({
+	enabled = true,
+	text = "FOV Rainbow Effect",
+	flag = "fov_rainbow",
+	tooltip = "Enables rainbow FOV coloring",
+	risky = false,
+	callback = function(v)
+		fovRainbow = v
+	end
+})
+
+sections.Section1:AddColor({
+	enabled = true,
+	text = "Snapline Color",
+	flag = "snapline_color",
+	tooltip = "Select the color of the snapline",
+	color = Color3.fromRGB(255, 0, 0),
+	trans = 0,
+	open = false,
+	callback = function(c)
+		snaplineColor = c
+	end
+})
+
+sections.Section1:AddToggle({
+	enabled = true,
+	text = "Snapline Rainbow Effect",
+	flag = "snapline_rainbow",
+	tooltip = "Enables rainbow Snapline coloring",
+	risky = false,
+	callback = function(v)
+		snaplineRainbow = v
+	end
+})
+
+sections.Section1:AddText({
+    enabled = true,
+    text = "Dont Touch KeyBind U will Get Banned",
+    flag = "Text_1",
+    risky = true,
+})
+
+sections.Section1:AddBind({
+    text = "Aimbot Key",
+    flag = "aimbot_keybind",
+    nomouse = true,
+    noindicator = true,
+    tooltip = "Toggle aimbot keybind",
+    mode = "toggle",
+    bind = Enum.KeyCode.E,
+    risky = false,
+    keycallback = function(k)
+        if typeof(k) == "EnumItem" and k.EnumType == Enum.KeyCode then
+            getgenv().aimbot_key = k
+        else
+            warn("Invalid keybind:", k)
+        end
+    end
+})
+
+UserInputService.InputBegan:Connect(function(input, gp)
+    if gp then return end
+    if getgenv().aimbot_key and typeof(getgenv().aimbot_key) == "EnumItem" and getgenv().aimbot_key.EnumType == Enum.KeyCode then
+        if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == getgenv().aimbot_key then
+            aiming = true
+        end
+    end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+    if getgenv().aimbot_key and typeof(getgenv().aimbot_key) == "EnumItem" and getgenv().aimbot_key.EnumType == Enum.KeyCode then
+        if input.UserInputType == Enum.UserInputType.Keyboard and input.KeyCode == getgenv().aimbot_key then
+            aiming = false
+        end
+    end
+end)
+
+local function worldToScreen(pos)
+	local pt, onScreen = camera:WorldToViewportPoint(pos)
+	return Vector2.new(pt.X, pt.Y), onScreen
+end
+
+local function getEquippedBulletSpeed()
+	local sel = localPlayer.CurrentSelectedObject and localPlayer.CurrentSelectedObject.Value
+	if typeof(sel) ~= "Instance" then return 2200 end
+
+	local slot = localPlayer.GunInventory:FindFirstChild(sel.Name)
+	if not slot or not slot.Value then return 2200 end
+
+	local gunName
+	if typeof(slot.Value) == "string" then
+		gunName = slot.Value
+	elseif typeof(slot.Value) == "Instance" then
+		gunName = tostring(slot.Value)
+	else
+		return 2250
+	end
+
+	local data = ReplicatedStorage.GunData:FindFirstChild(gunName)
+	if not data or not data:FindFirstChild("Stats") or not data.Stats:FindFirstChild("BulletSettings") then return 2200 end
+
+	local spd = data.Stats.BulletSettings:FindFirstChild("BulletSpeed")
+	return (spd and spd:IsA("IntValue")) and spd.Value or 2200
+end
+
+local function calculateDrop(distance, speed)
+	if not speed or speed <= 0 then return 0 end
+	local t = distance / speed
+	return 0.5 * GRAVITY * t * t
+end
+
+RunService.RenderStepped:Connect(function()
+	local t = tick()
+	local center2d = Vector2.new(camera.ViewportSize.X / 2, camera.ViewportSize.Y / 2)
+	fovCircle.Position = center2d
+	fovCircle.Visible = showFOV
+	fovCircle.Color = fovRainbow and Color3.fromHSV(t % 5 / 5, 1, 1) or fovColor
+
+	local heads = {}
+	for _, mdl in ipairs(Workspace.Characters:GetChildren()) do
+		if mdl:IsA("Model") and mdl:FindFirstChild("Head") then
+			table.insert(heads, mdl.Head)
+		end
+	end
+
+	local myHead = localPlayer.Character and (localPlayer.Character:FindFirstChild("ServerColliderHead") or localPlayer.Character:FindFirstChild("Head"))
+	local ignoreIdx, ignoreDist = nil, math.huge
+	if myHead then
+		for i, head in ipairs(heads) do
+			local d = (head.Position - myHead.Position).Magnitude
+			if d < ignoreDist then
+				ignoreDist = d
+				ignoreIdx = i
+			end
+		end
+	end
+
+	local targetHead, target2d, minDist = nil, nil, math.huge
+	for i, head in ipairs(heads) do
+		if i ~= ignoreIdx then
+			local pos2d, onScreen = worldToScreen(head.Position)
+			if onScreen then
+				local dist = (pos2d - center2d).Magnitude
+				if dist <= fovRadius and dist < minDist then
+					minDist = dist
+					targetHead = head
+					target2d = pos2d
+				end
+			end
+		end
+	end
+
+	if snapline then
+		snapline:Remove()
+		snapline = nil
+	end
+
+	if showSnapline and targetHead then
+		snapline = Drawing.new("Line")
+		snapline.From = center2d
+		snapline.To = target2d
+		snapline.Color = snaplineRainbow and Color3.fromHSV(t % 5 / 5, 1, 1) or snaplineColor
+		snapline.Thickness = snaplineThickness
+		snapline.Transparency = 1
+		snapline.Visible = true
+	end
+
+	if aiming and enabled and targetHead then
+		local camPos = camera.CFrame.Position
+		local headPos = targetHead.Position
+		local horizDist = (Vector3.new(headPos.X, camPos.Y, headPos.Z) - camPos).Magnitude
+		local speed = getEquippedBulletSpeed()
+		local drop = calculateDrop(horizDist, speed) * 1.4 * predictionYAdjust
+
+		local predictedOffset = Vector3.zero
+		for _, plr in ipairs(Players:GetPlayers()) do
+			if plr ~= localPlayer and plr.Character and plr.Character:FindFirstChild("ServerColliderHead") then
+				local velocity = plr.Character.ServerColliderHead.Velocity
+				local predictedTime = horizDist / speed
+				local prediction = velocity * predictedTime * predictionXAdjust
+				if (plr.Character.ServerColliderHead.Position - headPos).Magnitude < 10 then
+					predictedOffset = prediction
+					break
+				end
+			end
+		end
+
+		local compensatedPos = headPos + Vector3.new(0, drop * 1.5, 0) + predictedOffset
+		local comp2d, onS = worldToScreen(compensatedPos)
+		if onS then
+			local delta = comp2d - center2d
+			mousemoverel(delta.X * smoothing, delta.Y * smoothing)
+		end
+	end
+end)
+
+sections.Section3:AddToggle({
+	text = "Carfly",
+	flag = "carfly_enabled",
+	state = false,
+	callback = function(state)
+		getgenv().carfly_enabled = state
+		if not state and FlyConnection then
+			FlyConnection:Disconnect()
+			FlyConnection = nil
+			StarterGui:SetCore("SendNotification", {
+				Title = "Car Fly OFF",
+				Text = "Fly Disabled!"
+			})
+		end
+	end
+})
+
+sections.Section3:AddBind({
+	text = "Carfly Key",
+	flag = "carfly_key",
+	nomouse = true,
+	noindicator = true,
+	tooltip = "Toggle Carfly",
+	mode = "toggle",
+	bind = Enum.KeyCode.B,
+	keycallback = function(k)
+		getgenv().carfly_key = k
+	end
+})
+
+
+getgenv().carfly_enabled = false
+getgenv().carfly_key = Enum.KeyCode.B
+
+
+local Players = game:GetService("Players")
+local UserInputService = game:GetService("UserInputService")
+local StarterGui = game:GetService("StarterGui")
+local RunService = game:GetService("RunService")
+
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+
+local Character = LocalPlayer.Character or LocalPlayer.CharacterAdded:Wait()
+local HumanoidRoot = nil
+local FlyConnection = nil
+local Velocity = Vector3.new()
+
+workspace.Changed:Connect(function()
+	Camera = workspace.CurrentCamera
+end)
+
+local function SetupCharacter(char)
+	Character = char
+	HumanoidRoot = char:WaitForChild("HumanoidRootPart")
+end
+
+LocalPlayer.CharacterAdded:Connect(SetupCharacter)
+if LocalPlayer.Character then
+	SetupCharacter(LocalPlayer.Character)
+end
+
+local function isnetworkowner(part)
+	return true
+end
+
+local function GetClosestVehicle()
+	local closest, distance = nil, math.huge
+	for _, v in ipairs(workspace:GetDescendants()) do
+		if v.Name == "WorldModel" and v:IsA("Model") then
+			local dist = (v:GetPivot().Position - (HumanoidRoot and HumanoidRoot.Position or Vector3.new())).Magnitude
+			if dist < distance then
+				closest = v
+				distance = dist
+			end
+		end
+	end
+	return closest
+end
+
+local function CleanupVehicle(vehicle)
+	local partsToDestroy = {
+		"Animation","AntiRoll","AntiRollBars","AntiTeleport",
+		"Burnout","Engine","Redress","Remotes","Steering",
+		"Suspension","Wheels"
+	}
+	for _, name in ipairs(partsToDestroy) do
+		local part = vehicle:FindFirstChild(name)
+		if part then part:Destroy() end
+	end
+	local scripts = vehicle:FindFirstChild("Scripts")
+	if scripts then
+		for _, n in ipairs({"lerp","Units","Controller","Constants","Server","Plugins","Client"}) do
+			local sub = scripts:FindFirstChild(n)
+			if sub then sub:Destroy() end
+		end
+	end
+end
+
+local function FlyStep(dt)
+	local move = Vector3.new()
+	if not UserInputService:GetFocusedTextBox() then
+		if UserInputService:IsKeyDown(Enum.KeyCode.W) then
+			move += Camera.CFrame.LookVector * 105
+		end
+		if UserInputService:IsKeyDown(Enum.KeyCode.S) then
+			move -= Camera.CFrame.LookVector * 105
+		end
+		if UserInputService:IsKeyDown(Enum.KeyCode.A) then
+			move -= Camera.CFrame.RightVector * 105
+		end
+		if UserInputService:IsKeyDown(Enum.KeyCode.D) then
+			move += Camera.CFrame.RightVector * 105
+		end
+		if UserInputService:IsKeyDown(Enum.KeyCode.Space) then
+			move += Camera.CFrame.UpVector * 105
+		end
+		if UserInputService:IsKeyDown(Enum.KeyCode.LeftControl) then
+			move *= 3
+		end
+	end
+
+	if HumanoidRoot then
+		local root = HumanoidRoot
+		if root.Anchored then return end
+		if not isnetworkowner(root) then return end
+
+		Velocity = Velocity:Lerp(move, math.clamp(dt * 4, 0, 1))
+		root.Velocity = Velocity + Vector3.new(0, -2, 0)
+		root.RotVelocity = Vector3.new(0, 0, 0)
+		root.CFrame = root.CFrame:Lerp(CFrame.lookAt(root.Position, root.Position + Velocity + Camera.CFrame.LookVector), math.clamp(dt * 16, 0, 1))
+	end
+end
+
+
+UserInputService.InputBegan:Connect(function(input, processed)
+	if processed then return end
+	if input.KeyCode == getgenv().carfly_key and getgenv().carfly_enabled then
+		if FlyConnection then
+			FlyConnection:Disconnect()
+			FlyConnection = nil
+			StarterGui:SetCore("SendNotification", {
+				Title = "Car Fly OFF",
+				Text = "Fly Disabled!"
+			})
+		else
+			Velocity = HumanoidRoot and HumanoidRoot.Velocity or Vector3.new()
+			FlyConnection = RunService.Heartbeat:Connect(FlyStep)
+			CleanupVehicle(GetClosestVehicle())
+			StarterGui:SetCore("SendNotification", {
+				Title = "Car Fly ON",
+				Text = "Fly Enabled!"
+			})
+		end
+	end
+end)
+
+sections.Section4:AddToggle({ text = "No Leaves", flag = "no_leaves_enabled", state = false })
+
+task.spawn(function()
+	while true do
+		if library.flags.no_leaves_enabled then
+			for _, v in workspace:GetDescendants() do
+				if v.Name == "Leaves" then
+					v:Destroy()
+				end
+			end
+		end
+		task.wait(3)
+	end
+end)
+
+sections.Section4:AddToggle({ text = "No Grass", flag = "no_grass_enabled", state = false })
+
+task.spawn(function()
+	while true do
+		if library.flags.no_grass_enabled then
+			pcall(function()
+				sethiddenproperty(workspace.Terrain, "Decoration", false)
+			end)
+		end
+		task.wait(3)
+	end
+end)
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local LocalPlayer = Players.LocalPlayer
+
+
+sections.Section5:AddToggle({
+    text = "HitSound",
+    flag = "hitsound_enabled",
+    state = false,
+    callback = function(state)
+        getgenv().hitsound_enabled = state
+    end
+})
+
+sections.Section5:AddList({
+    enabled = true,
+    text = "Select HitSound",
+    flag = "hitsound_type",
+    multi = false,
+    tooltip = "Choose a hitsound",
+    value = "Default",
+    values = {
+        "Default", "Gamesense", "CS:GO", "Among Us", "Neverlose",
+        "TF2 Critical", "Mario", "Rust", "Call of Duty", "Steve",
+        "Bamboo", "Minecraft", "TF2"
+    },
+    callback = function(selected)
+        getgenv().selected_hitsound = selected
+    end
+})
+
+local soundIds = {
+    ["Default"] = { Hitmarker = "rbxassetid://5764886834", Headshot = "rbxassetid://5764885315" },
+    ["Gamesense"] = { Hitmarker = "rbxassetid://4817809188", Headshot = "rbxassetid://4817809188" },
+    ["CS:GO"] = { Hitmarker = "rbxassetid://6937353691", Headshot = "rbxassetid://6937353691" },
+    ["Among Us"] = { Hitmarker = "rbxassetid://5700183626", Headshot = "rbxassetid://5700183626" },
+    ["Neverlose"] = { Hitmarker = "rbxassetid://8726881116", Headshot = "rbxassetid://8726881116" },
+    ["TF2 Critical"] = { Hitmarker = "rbxassetid://296102734", Headshot = "rbxassetid://296102734" },
+    ["Mario"] = { Hitmarker = "rbxassetid://129738921", Headshot = "rbxassetid://129738921" },
+    ["Rust"] = { Hitmarker = "rbxassetid://9011305502", Headshot = "rbxassetid://9011305502" },
+    ["Call of Duty"] = { Hitmarker = "rbxassetid://5304050850", Headshot = "rbxassetid://5304050850" },
+    ["Steve"] = { Hitmarker = "rbxassetid://6692379649", Headshot = "rbxassetid://6692379649" },
+    ["Bamboo"] = { Hitmarker = "rbxassetid://9118823100", Headshot = "rbxassetid://9118823100" },
+    ["Minecraft"] = { Hitmarker = "rbxassetid://139934608", Headshot = "rbxassetid://139934608" },
+    ["TF2"] = { Hitmarker = "rbxassetid://140186881", Headshot = "rbxassetid://140186881" },
+}
+
+
+local SOUNDS_FOLDER_PATH = { "Assets", "Sounds", "DefaultHitmarker" }
+
+local function findSoundsFolder()
+    local current = ReplicatedStorage
+    for _, folderName in ipairs(SOUNDS_FOLDER_PATH) do
+        current = current:FindFirstChild(folderName)
+        if not current then return nil end
+    end
+    return current
+end
+
+local function replaceSounds()
+    local soundsFolder
+    repeat
+        soundsFolder = findSoundsFolder()
+        if not soundsFolder then
+            task.wait(1)
+            warn("Waiting for sounds folder...")
+        end
+    until soundsFolder
+
+    while true do
+        if getgenv().hitsound_enabled and getgenv().selected_hitsound then
+            local replacement = soundIds[getgenv().selected_hitsound]
+            if replacement then
+                for soundName, newId in pairs(replacement) do
+                    local sound = soundsFolder:FindFirstChild(soundName)
+                    if sound and sound:IsA("Sound") and sound.SoundId ~= newId then
+                        sound.SoundId = newId
+                        sound.Volume = 2.0
+                        print("Updated:", soundName)
+                    end
+                end
+            end
+        end
+        task.wait(1)
+    end
+end
+
+local function interceptNewSounds()
+    workspace.DescendantAdded:Connect(function(descendant)
+        if getgenv().hitsound_enabled and getgenv().selected_hitsound then
+            if descendant:IsA("Sound") then
+                task.wait(0.05)
+                local replacement = soundIds[getgenv().selected_hitsound]
+                if replacement and replacement[descendant.Name] then
+                    descendant.SoundId = replacement[descendant.Name]
+                    descendant.Volume = 2.0
+                end
+            end
+        end
+    end)
+end
+
+
+sections.VisualSection1:AddToggle({
+	text = "Esp(Enabled it Once)",
+	flag = "esp_enabled",
+	state = false,
+	callback = function(state)
+		if state then
+			loadstring(game:HttpGet("https://raw.githubusercontent.com/ChadreysOfficialScript/Esp/refs/heads/main/Esp"))()
+		end
+	end
+})
+
+
+sections.VisualSection2:AddToggle({ text = "Inventory Viewer", flag = "invviewer_enabled", state = false })
+
+sections.VisualSection3:AddToggle({ text = "Vehicle Esp", flag = "vehicle_esp_enabled", state = false })
+sections.VisualSection3:AddSlider({
+	text = " Max Distance", flag = "vehicle_esp_distance", min = 100, max = 5000,
+	value = 1000, suffix = "m", decimals = 0
+})
+
+local Players = game:GetService("Players")
+local StarterGui = game:GetService("StarterGui")
+local LocalPlayer = Players.LocalPlayer
+
+local selectedWeapons = {}
+local gunScannerEnabled = false
+
+local weaponList = {
+    "Barret50", "MRAD", "M4A1", "SPAS12", "MK47", "AKM",
+    "SVD", "M249", "G36K", "SAIGA", "AWM", "SCAR",
+    "MK18", "M110K", "MK14", "PKM"
+}
+
+local function notify(text)
+    pcall(function()
+        StarterGui:SetCore("SendNotification", {
+            Title = "Gun Scan",
+            Text = text,
+            Duration = 4
+        })
+    end)
+end
+
+local function scanWeapons()
+    if not gunScannerEnabled or #selectedWeapons == 0 then return end
+
+    local found = false
+
+    for _, player in ipairs(Players:GetPlayers()) do
+        local inventory = player:FindFirstChild("GunInventory")
+        if inventory then
+            for _, item in ipairs(inventory:GetChildren()) do
+                if item:IsA("ObjectValue") and item.Value then
+                    for _, weaponName in ipairs(selectedWeapons) do
+                        if item.Value.Name == weaponName then
+                            found = true
+                            notify(player.Name .. " has " .. weaponName)
+                        end
+                    end
+                end
+            end
+        end
+    end
+
+    if not found then
+        notify("No players have the selected weapon")
+    end
+end
+
+sections.VisualSection4:AddToggle({
+    text = "Gun Scanner",
+    flag = "gun_scanner_enabled",
+    state = false,
+    callback = function(state)
+        gunScannerEnabled = state
+        if state then
+            scanWeapons()
+        end
+    end
+})
+
+sections.VisualSection4:AddList({
+    enabled = true,
+    text = "Select Weapon",
+    flag = "gun_scanner_weapon",
+    multi = false,
+    tooltip = "Select a weapon",
+    risky = false,
+    dragging = false,
+    focused = false,
+    value = weaponList[1],
+    values = weaponList,
+    callback = function(selected)
+        selectedWeapons = { selected }
+        if gunScannerEnabled then
+            scanWeapons()
+        end
+    end
+})
+
+local RunService = game:GetService("RunService")
+local camera = workspace.CurrentCamera
+
+local showGraves = false
+local showDistance = false
+local showOutlines = false
+local graveSize = 14
+local graveColor = Color3.fromRGB(255, 255, 255)
+
+local graveESP = {}
+
+local function createGraveESP(model, meshPart)
+    local text = Drawing.new("Text")
+    text.Size = graveSize
+    text.Center = true
+    text.Outline = showOutlines
+    text.Color = graveColor
+    text.Visible = showGraves
+
+    graveESP[model] = { text = text, part = meshPart }
+end
+
+local function removeGraveESP(model)
+    if graveESP[model] then
+        graveESP[model].text:Remove()
+        graveESP[model] = nil
+    end
+end
+
+RunService.RenderStepped:Connect(function()
+    for _, model in ipairs(workspace:GetChildren()) do
+        if model:IsA("Model") and model.Name == "Default" and not graveESP[model] then
+            local meshPart = model:FindFirstChildWhichIsA("MeshPart")
+            if meshPart then
+                createGraveESP(model, meshPart)
+            end
+        end
+    end
+
+    for model, data in pairs(graveESP) do
+        if not model:IsDescendantOf(workspace) or not data.part then
+            removeGraveESP(model)
+        else
+            local screenPos, onScreen = camera:WorldToViewportPoint(data.part.Position)
+            if onScreen and showGraves then
+                local name = data.part:GetAttribute("DisplayName") or "Unknown"
+                local searched = data.part:GetAttribute("Searched")
+                local distanceStr = ""
+
+                if typeof(searched) == "boolean" and searched == true then
+                    name = "[Searched] " .. name
+                end
+
+                if showDistance then
+                    local dist = (camera.CFrame.Position - data.part.Position).Magnitude
+                    distanceStr = string.format(" [%.1fm]", dist)
+                end
+
+                data.text.Text = name .. distanceStr
+                data.text.Position = Vector2.new(screenPos.X, screenPos.Y)
+                data.text.Size = graveSize
+                data.text.Color = graveColor
+                data.text.Outline = showOutlines
+                data.text.Visible = true
+            else
+                data.text.Visible = false
+            end
+        end
+    end
+end)
+
+sections.VisualSection5:AddToggle({
+    text = "Show Graves",
+    flag = "show_graves",
+    state = false,
+    callback = function(state)
+        showGraves = state
+        for _, v in pairs(graveESP) do
+            v.text.Visible = state
+        end
+    end
+})
+
+sections.VisualSection5:AddToggle({
+    text = "Grave Outlines",
+    flag = "grave_outlines",
+    state = false,
+    callback = function(state)
+        showOutlines = state
+        for _, v in pairs(graveESP) do
+            v.text.Outline = state
+        end
+    end
+})
+
+sections.VisualSection5:AddToggle({
+    text = "Grave Distance",
+    flag = "grave_distance",
+    state = false,
+    callback = function(state)
+        showDistance = state
+    end
+})
+
+sections.VisualSection5:AddSlider({
+    text = "Grave Size",
+    flag = "grave_size",
+    value = 14,
+    min = 0,
+    max = 100,
+    increment = 1,
+    tooltip = "Text size of grave ESP",
+    callback = function(val)
+        graveSize = val
+        for _, v in pairs(graveESP) do
+            v.text.Size = val
+        end
+    end
+})
+
+sections.VisualSection5:AddColor({
+    enabled = true,
+    text = "Grave Color",
+    flag = "grave_color",
+    tooltip = "Color of grave ESP text",
+    color = Color3.fromRGB(255, 255, 255),
+    trans = 0,
+    open = false,
+    callback = function(color)
+        graveColor = color
+        for _, v in pairs(graveESP) do
+            v.text.Color = color
+        end
+    end
+})
+
+library:SendNotification("Ch4dr3y.xyz loaded", 5, Color3.new(1, 0, 0))
+
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+local LocalPlayer = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
+local Mouse = LocalPlayer:GetMouse()
+
+local boxWidth = 280
+local lineSpacing = 20
+local box = Drawing.new("Square")
+box.Filled = true
+box.Transparency = 0.5
+box.Color = Color3.new(0, 0, 0)
+box.Visible = false
+box.ZIndex = 1
+
+local textLines, maxLines = {}, 30
+for i = 1, maxLines do
+	local t = Drawing.new("Text")
+	t.Size, t.Color, t.Outline, t.Font, t.Visible, t.ZIndex = 16, Color3.new(1, 1, 1), true, 2, false, 2
+	table.insert(textLines, t)
+end
+
+local function updateBoxHeight(lineCount)
+	box.Size = Vector2.new(boxWidth, lineCount * lineSpacing + 10)
+end
+
+local dragging, dragStartPos, mouseStartPos = false, nil, nil
+box.Position = Vector2.new(Camera.ViewportSize.X - boxWidth - 20, 20)
+
+UserInputService.InputBegan:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		local mousePos = Vector2.new(Mouse.X, Mouse.Y)
+		if mousePos.X >= box.Position.X and mousePos.X <= box.Position.X + box.Size.X and
+		   mousePos.Y >= box.Position.Y and mousePos.Y <= box.Position.Y + box.Size.Y then
+			dragging = true
+			dragStartPos = box.Position
+			mouseStartPos = mousePos
+		end
+	end
+end)
+
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+	if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+		local delta = Vector2.new(Mouse.X, Mouse.Y) - mouseStartPos
+		local newPos = dragStartPos + delta
+		box.Position = newPos
+		for i, t in ipairs(textLines) do
+			if t.Visible then t.Position = Vector2.new(newPos.X + 5, newPos.Y + 5 + (i - 1) * lineSpacing) end
+		end
+	end
+end)
+
+local function getGunInfoLines(target)
+	local lines = {}
+	if not target or not target:FindFirstChild("GunInventory") then
+		table.insert(lines, "")
+	else
+		table.insert(lines, target.Name .. "")
+		local gunInventory, gunObjects = target:FindFirstChild("GunInventory"), target:FindFirstChild("GunInventory"):GetChildren()
+		if #gunObjects == 0 then table.insert(lines, "")
+		else
+			local weaponOrder, weaponMap, others = { "AKM", "SVD", "Saiga", "Barret50" }, {}, {}
+			for _, gunObj in ipairs(gunObjects) do
+				if gunObj:IsA("ObjectValue") and gunObj.Value then
+					local gunName = tostring(gunObj.Value)
+					if table.find(weaponOrder, gunName) then
+						weaponMap[gunName] = weaponMap[gunName] or {}
+						table.insert(weaponMap[gunName], gunObj)
+					else table.insert(others, gunObj) end
+				end
+			end
+			for _, wname in ipairs(weaponOrder) do
+				if weaponMap[wname] then
+					for _, gunObj in ipairs(weaponMap[wname]) do
+						local scopeText = ""
+						local reticleObj = gunObj:FindFirstChild("AttachmentReticle")
+						if reticleObj and reticleObj:IsA("ObjectValue") and reticleObj.Value then
+							scopeText = tostring(reticleObj.Value)
+						end
+						table.insert(lines, wname .. " - " .. scopeText)
+						local mag = gunObj:FindFirstChild("BulletsInMagazine")
+						local reserve = gunObj:FindFirstChild("BulletsInReserve")
+						if mag and reserve and mag:IsA("IntValue") and reserve:IsA("IntValue") then
+							table.insert(lines, tostring(mag.Value) .. " / " .. tostring(reserve.Value))
+						end
+					end
+				end
+			end
+			for _, gunObj in ipairs(others) do
+				local gunName = tostring(gunObj.Value)
+				local scopeText = ""
+				local reticleObj = gunObj:FindFirstChild("AttachmentReticle")
+				if reticleObj and reticleObj:IsA("ObjectValue") and reticleObj.Value then
+					scopeText = tostring(reticleObj.Value)
+				end
+				table.insert(lines, gunName .. " - " .. scopeText)
+				local mag = gunObj:FindFirstChild("BulletsInMagazine")
+				local reserve = gunObj:FindFirstChild("BulletsInReserve")
+				if mag and reserve and mag:IsA("IntValue") and reserve:IsA("IntValue") then
+					table.insert(lines, tostring(mag.Value) .. " / " .. tostring(reserve.Value))
+				end
+			end
+		end
+	end
+
+	table.insert(lines, "────────────")
+
+	local weaponCounts = { AKM = 0, SVD = 0, Saiga = 0, Barret50 = 0 }
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer and player:FindFirstChild("GunInventory") then
+			for _, gunObj in ipairs(player.GunInventory:GetChildren()) do
+				if gunObj:IsA("ObjectValue") and gunObj.Value then
+					local gunName = tostring(gunObj.Value)
+					if weaponCounts[gunName] then
+						weaponCounts[gunName] = weaponCounts[gunName] + 1
+					end
+				end
+			end
+		end
+	end
+
+	for _, wname in ipairs({ "AKM", "SVD", "Saiga", "Barret50" }) do
+		table.insert(lines, wname .. " : " .. tostring(weaponCounts[wname]) .. ".")
+	end
+
+	return lines
+end
+
+local function getClosestPlayerToCenter()
+	local closestPlayer, closestDist = nil, math.huge
+	local screenCenter = Vector2.new(Camera.ViewportSize.X / 2, Camera.ViewportSize.Y / 2)
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player ~= LocalPlayer and player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+			local screenPos, onScreen = Camera:WorldToViewportPoint(player.Character.HumanoidRootPart.Position)
+			if onScreen then
+				local dist = (Vector2.new(screenPos.X, screenPos.Y) - screenCenter).Magnitude
+				if dist < closestDist then
+					closestDist, closestPlayer = dist, player
+				end
+			end
+		end
+	end
+	return closestPlayer
+end
+
+RunService.RenderStepped:Connect(function()
+	if not library.flags.invviewer_enabled then
+		box.Visible = false
+		for _, t in ipairs(textLines) do t.Visible = false end
+		return
+	end
+
+	box.Visible = true
+	local target = getClosestPlayerToCenter()
+	local lines = getGunInfoLines(target)
+
+	updateBoxHeight(#lines)
+	for i, t in ipairs(textLines) do t.Visible = false end
+	for i, line in ipairs(lines) do
+		local t = textLines[i]
+		t.Text, t.Visible = line, true
+		t.Position = Vector2.new(box.Position.X + 5, box.Position.Y + 5 + (i - 1) * lineSpacing)
+	end
+end)
+
+
+local vehicleESP = {}
+
+local function isVehicle(model)
+	return model:FindFirstChild("DriveSeat") ~= nil
+end
+
+local function isVehicleESPEnabled()
+	return library.flags.vehicle_esp_enabled
+end
+
+local function getMaxVehicleDistance()
+	return library.flags.vehicle_esp_distance or 1000
+end
+
+local function updateVehicleESP()
+	if not isVehicleESPEnabled() then
+		for _, esp in pairs(vehicleESP) do
+			if esp.name then esp.name.Visible = false end
+			if esp.distance then esp.distance.Visible = false end
+		end
+		return
+	end
+
+	for _, obj in pairs(vehicleESP) do
+		obj.name.Visible = false
+		obj.distance.Visible = false
+	end
+
+	for _, vehicle in ipairs(workspace:GetChildren()) do
+		if isVehicle(vehicle) then
+			local seat = vehicle.DriveSeat
+			local distance = (Camera.CFrame.Position - seat.Position).Magnitude
+			if distance <= getMaxVehicleDistance() then
+				local screenPos, onScreen = Camera:WorldToViewportPoint(seat.Position)
+				if onScreen then
+					local esp = vehicleESP[vehicle]
+					if not esp then
+						local nameLabel = Drawing.new("Text")
+						nameLabel.Font = 0
+						nameLabel.Size = 25
+						nameLabel.Color = Color3.fromRGB(0, 255, 0)
+						nameLabel.Center = true
+						nameLabel.Outline = true
+						nameLabel.OutlineColor = Color3.fromRGB(0, 0, 0)
+
+						local distanceLabel = Drawing.new("Text")
+						distanceLabel.Font = 0
+						distanceLabel.Size = 25
+						distanceLabel.Color = Color3.fromRGB(255, 255, 255)
+						distanceLabel.Center = true
+						distanceLabel.Outline = true
+						distanceLabel.OutlineColor = Color3.fromRGB(0, 0, 0)
+
+						esp = {
+							name = nameLabel,
+							distance = distanceLabel
+						}
+						vehicleESP[vehicle] = esp
+					end
+
+					esp.name.Text = "Vehicle"
+					esp.name.Position = Vector2.new(screenPos.X, screenPos.Y)
+					esp.name.Visible = true
+
+					esp.distance.Text = tostring(math.floor(distance / 3.64)) .. "m"
+					esp.distance.Position = Vector2.new(screenPos.X, screenPos.Y + 14)
+					esp.distance.Visible = true
+				end
+			end
+		end
+	end
+end
+
+workspace.ChildRemoved:Connect(function(child)
+	local esp = vehicleESP[child]
+	if esp then
+		if esp.name then esp.name:Remove() end
+		if esp.distance then esp.distance:Remove() end
+		vehicleESP[child] = nil
+	end
+end)
+
+RunService.RenderStepped:Connect(updateVehicleESP)
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+	if input.KeyCode == Enum.KeyCode.F1 then
+		library.flags.vehicle_esp_enabled = not library.flags.vehicle_esp_enabled
+		print("Vehicle ESP is now", library.flags.vehicle_esp_enabled and "ON" or "OFF")
+	end
+end)

@@ -4491,7 +4491,7 @@ function library:init()
             objects = {};
             text = {
                 {"Invictus", true},
-                {"V"..getgenv().Config.Version, true},
+                {"be"..getgenv().Config.Version, true},
                 {getgenv().luaguardvars.DiscordName, true},
                 {'0 fps', true},
                 {'0ms', true},

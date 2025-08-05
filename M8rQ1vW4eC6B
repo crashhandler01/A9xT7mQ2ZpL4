@@ -23,10 +23,7 @@ local tabs = {
 
 local sections = {
 	Section1 = tabs.Tab1:AddSection("Aimbot", 1),
-	Section3 = tabs.Tab1:AddSection("Carfly", 2),
-	Section4 = tabs.Tab1:AddSection("World", 4),
-    Section5 = tabs.Tab1:AddSection("Hitsound", 2),
-	Section9 = tabs.Tab1:AddSection("FOV CIRCLE", 1),
+	Section2 = tabs.Tab1:AddSection("FOV Circle", 1),
 
 
 	VisualSection1 = tabs.Tab2:AddSection("Humans", 1),
@@ -97,17 +94,6 @@ sections.Section9:AddToggle({
 	end
 })
 
-sections.Section1:AddToggle({
-	enabled = true,
-	text = "Show Snapline",
-	flag = "show_snapline",
-	tooltip = "Draw snapline to the target",
-	risky = false,
-	callback = function(v)
-	    showSnapline = v
-	end
-})
-
 sections.Section9:AddSlider({
 	text = "FOV Radius", 
 	flag = 'fov_radius', 
@@ -135,20 +121,6 @@ sections.Section9:AddSlider({
 	callback = function(v)
 		fovThickness = v
 		fovCircle.Thickness = v
-	end
-})
-
-sections.Section1:AddSlider({
-	text = "Snapline Thickness", 
-	flag = 'snapline_thickness', 
-	value = 2, 
-	min = 0, 
-	max = 100, 
-	increment = 1,
-	tooltip = "Thickness of the snapline",
-	risky = false,
-	callback = function(v)
-		snaplineThickness = v
 	end
 })
 
@@ -206,48 +178,6 @@ sections.Section9:AddColor({
 		fovColor = c
 		fovCircle.Color = c
 	end
-})
-
-sections.Section9:AddToggle({
-	enabled = true,
-	text = "FOV Rainbow Effect",
-	flag = "fov_rainbow",
-	tooltip = "Enables rainbow FOV coloring",
-	risky = false,
-	callback = function(v)
-		fovRainbow = v
-	end
-})
-
-sections.Section1:AddColor({
-	enabled = true,
-	text = "Snapline Color",
-	flag = "snapline_color",
-	tooltip = "Select the color of the snapline",
-	color = Color3.fromRGB(255, 0, 0),
-	trans = 0,
-	open = false,
-	callback = function(c)
-		snaplineColor = c
-	end
-})
-
-sections.Section1:AddToggle({
-	enabled = true,
-	text = "Snapline Rainbow Effect",
-	flag = "snapline_rainbow",
-	tooltip = "Enables rainbow Snapline coloring",
-	risky = false,
-	callback = function(v)
-		snaplineRainbow = v
-	end
-})
-
-sections.Section1:AddText({
-    enabled = true,
-    text = "Dont Touch KeyBind U will Get Banned",
-    flag = "Text_1",
-    risky = true,
 })
 
 sections.Section1:AddBind({
@@ -593,105 +523,6 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local LocalPlayer = Players.LocalPlayer
-
-
-sections.Section5:AddToggle({
-    text = "HitSound",
-    flag = "hitsound_enabled",
-    state = false,
-    callback = function(state)
-        getgenv().hitsound_enabled = state
-    end
-})
-
-sections.Section5:AddList({
-    enabled = true,
-    text = "Select HitSound",
-    flag = "hitsound_type",
-    multi = false,
-    tooltip = "Choose a hitsound",
-    value = "Default",
-    values = {
-        "Default", "Gamesense", "CS:GO", "Among Us", "Neverlose",
-        "TF2 Critical", "Mario", "Rust", "Call of Duty", "Steve",
-        "Bamboo", "Minecraft", "TF2"
-    },
-    callback = function(selected)
-        getgenv().selected_hitsound = selected
-    end
-})
-
-local soundIds = {
-    ["Default"] = { Hitmarker = "rbxassetid://5764886834", Headshot = "rbxassetid://5764885315" },
-    ["Gamesense"] = { Hitmarker = "rbxassetid://4817809188", Headshot = "rbxassetid://4817809188" },
-    ["CS:GO"] = { Hitmarker = "rbxassetid://6937353691", Headshot = "rbxassetid://6937353691" },
-    ["Among Us"] = { Hitmarker = "rbxassetid://5700183626", Headshot = "rbxassetid://5700183626" },
-    ["Neverlose"] = { Hitmarker = "rbxassetid://8726881116", Headshot = "rbxassetid://8726881116" },
-    ["TF2 Critical"] = { Hitmarker = "rbxassetid://296102734", Headshot = "rbxassetid://296102734" },
-    ["Mario"] = { Hitmarker = "rbxassetid://129738921", Headshot = "rbxassetid://129738921" },
-    ["Rust"] = { Hitmarker = "rbxassetid://9011305502", Headshot = "rbxassetid://9011305502" },
-    ["Call of Duty"] = { Hitmarker = "rbxassetid://5304050850", Headshot = "rbxassetid://5304050850" },
-    ["Steve"] = { Hitmarker = "rbxassetid://6692379649", Headshot = "rbxassetid://6692379649" },
-    ["Bamboo"] = { Hitmarker = "rbxassetid://9118823100", Headshot = "rbxassetid://9118823100" },
-    ["Minecraft"] = { Hitmarker = "rbxassetid://139934608", Headshot = "rbxassetid://139934608" },
-    ["TF2"] = { Hitmarker = "rbxassetid://140186881", Headshot = "rbxassetid://140186881" },
-}
-
-
-local SOUNDS_FOLDER_PATH = { "Assets", "Sounds", "DefaultHitmarker" }
-
-local function findSoundsFolder()
-    local current = ReplicatedStorage
-    for _, folderName in ipairs(SOUNDS_FOLDER_PATH) do
-        current = current:FindFirstChild(folderName)
-        if not current then return nil end
-    end
-    return current
-end
-
-local function replaceSounds()
-    local soundsFolder
-    repeat
-        soundsFolder = findSoundsFolder()
-        if not soundsFolder then
-            task.wait(1)
-            warn("Waiting for sounds folder...")
-        end
-    until soundsFolder
-
-    while true do
-        if getgenv().hitsound_enabled and getgenv().selected_hitsound then
-            local replacement = soundIds[getgenv().selected_hitsound]
-            if replacement then
-                for soundName, newId in pairs(replacement) do
-                    local sound = soundsFolder:FindFirstChild(soundName)
-                    if sound and sound:IsA("Sound") and sound.SoundId ~= newId then
-                        sound.SoundId = newId
-                        sound.Volume = 2.0
-                        print("Updated:", soundName)
-                    end
-                end
-            end
-        end
-        task.wait(1)
-    end
-end
-
-local function interceptNewSounds()
-    workspace.DescendantAdded:Connect(function(descendant)
-        if getgenv().hitsound_enabled and getgenv().selected_hitsound then
-            if descendant:IsA("Sound") then
-                task.wait(0.05)
-                local replacement = soundIds[getgenv().selected_hitsound]
-                if replacement and replacement[descendant.Name] then
-                    descendant.SoundId = replacement[descendant.Name]
-                    descendant.Volume = 2.0
-                end
-            end
-        end
-    end)
-end
-
 
 sections.VisualSection1:AddToggle({
 	text = "Esp(Enabled it Once)",

@@ -52,7 +52,7 @@ local library = {
         ['window'] = 1000;
         ['dropdown'] = 1200;
         ['colorpicker'] = 1100;
-        ['watermark'] = 1300;
+        [''] = 1300;
         ['notification'] = 1400;
     },
     stats = {
@@ -4493,6 +4493,8 @@ function library:init()
                 {"Invictus", true},
                 {"V"..getgenv().Config.Version, true},
                 {getgenv().luaguardvars.DiscordName, true},
+                {'0 fps', true},
+                {'0ms', true},
             };
             lock = 'custom';
             position = newUDim2(0,0,0,0);

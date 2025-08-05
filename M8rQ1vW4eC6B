@@ -4,7 +4,7 @@ getgenv().Config = {
 }
 
 getgenv().luaguardvars = {
-	DiscordName = "junoes",
+	DiscordName = "junoes_",
 }
 
 local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/qwedump/T6aC9zL3wX7E/refs/heads/main/J2xV8mD5qR1L"))()

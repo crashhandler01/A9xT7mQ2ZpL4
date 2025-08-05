@@ -1,5 +1,5 @@
 getgenv().Config = {
-	Invite = "Invictus",
+	Invite = "junoes",
 	Version = "1.0",
 }
 
